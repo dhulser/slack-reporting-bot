@@ -20,15 +20,33 @@ var bot = controller.spawn({
     token: process.env.token
 }).startRTM();
 
-controller.hears(['Pull a report', 'report'], 'direct_message,direct_mention,mention', function(bot, message) {
+controller.hears(['report'], 'direct_message,direct_mention,mention', function(bot, message) {
+    const parts = message.text.split(' ')
+    var startdate = parts[1]
+    var enddate = parts[3]
+    var siteID = parts[5]
+    
+        if (parts.length != 6 || parts[0] !== 'report') {
+            bot.reply(message, 'This is an invalid format, make sure you\'re using "report: YYYY-MM-DD to YYYY-MM-DD site: xxxxxx"')
+            }
+            
+    console.log('-------parts length------' + parts.length)
+    console.log('-------part 0------' + parts[0])
+    
     var apikey = process.env.apikey
     var options = { method: 'POST',
         url: 'https://api.adzerk.net/v1/report/queue',
         headers: 
    { 'x-adzerk-apikey': apikey,
      'content-type': 'application/x-www-form-urlencoded' },
-            body: 'criteria={"StartDateISO":"2017-01-01","EndDateISO":"2017-01-24","Parameters":[{"siteId":687249}],"GroupBy":[]}' };
-   
+            body: `criteria={"StartDateISO":"${startdate}","EndDateISO":"${enddate}","Parameters":[{"siteId":${siteID}}],"GroupBy":[]}`
+                  };
+    
+    console.log('------start date-------->' , startdate) 
+    console.log('------end date-------->' , enddate) 
+    console.log('------siteID-------->' , siteID) 
+
+
     
 request(options, function (error, response, body) {
   if (error) throw new Error(error);
@@ -37,7 +55,7 @@ request(options, function (error, response, body) {
       var reportID = report.Id
 
     setTimeout(function() {
-
+            
             console.log('------reportID-------->' , reportID) 
             bot.reply(message, 'ReportID:  ' + reportID)
     
@@ -57,6 +75,7 @@ function checkforreport () {
     var reportresponse = JSON.parse(response.body)
     var reportstatus = reportresponse.Status
     
+    console.log('------report response---------->' , reportresponse)
     console.log('------reportstatus---------->' , reportstatus)
 
 	if (reportstatus != 2) {
